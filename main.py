@@ -26,8 +26,8 @@ def get_ethernet_header(pkt):
 
     unpacked_pkt = struct.unpack('!6s6sH', pkt) # Unpack
 
-    dest_MAC = binascii.hexlify(unpacked_pkt[0])
-    src_MAC = binascii.hexlify(unpacked_pkt[1])
+    dest_MAC = unpacked_pkt[0].hex(':')
+    src_MAC = unpacked_pkt[1].hex(':')
     proto_type = unpacked_pkt[2]
 
     data = {'Destination MAC': dest_MAC,\
@@ -36,12 +36,57 @@ def get_ethernet_header(pkt):
     
     return data
 
-s = get_socket()
-while True:
-    packet = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
 
-    eth_header = get_ethernet_header(packet[0][0:14]) # Get ethernet header values
+# Function to unpack the packet and get ip header data
+def get_ip_header(pkt):
 
-    print('\n')
-    for key, value in eth_header.items(): # Print header
-        print('{0} : {1}'.format(key, value))
+    unpacked_pkt=struct.unpack("!BBHHHBBH4s4s", pkt)
+
+    _version =unpacked_pkt[0] 
+    _tos=unpacked_pkt[1]
+    _total_length =unpacked_pkt[2]
+    _identification =unpacked_pkt[3]
+    _fragment_Offset =unpacked_pkt[4]
+    _ttl =unpacked_pkt[5]
+    _protocol =unpacked_pkt[6]
+    _header_checksum =unpacked_pkt[7]
+    _source_address =socket.inet_ntoa(unpacked_pkt[8])
+    _destination_address =socket.inet_ntoa(unpacked_pkt[9])
+    
+    data={'Version':_version,
+    "Tos":_tos,
+    "Total Length":_total_length,
+    "Identification":_identification,
+    "Fragment":_fragment_Offset,
+    "TTL":_ttl,
+    "Protocol":_protocol,
+    "Header CheckSum":_header_checksum,
+    "Source Address":_source_address,
+    "Destination Address":_destination_address}
+
+    return data
+
+
+def main():
+    # Initialize socket
+    s = get_socket()
+
+    # Sniff traffic until keyboard interrupt
+    while True:
+        try:
+            packet = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
+
+            eth_header = get_ip_header(packet[0][0:20]) # Get IP header values
+
+            print('\n\n[+] IP Header')
+            for key, value in eth_header.items(): # Print header
+                print('\t{0} : {1}'.format(key, value))
+        
+        except KeyboardInterrupt:
+            print('Keyboard interrupt received. Quitting')
+            break
+
+    s.close() # Close the socket at the end
+
+if (__name__=='__main__'):
+    main()
