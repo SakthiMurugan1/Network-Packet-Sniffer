@@ -20,23 +20,6 @@ def get_socket():
 
     return s
 
-
-# Function to unpack the packet and get ethernet header data
-def get_ethernet_header(pkt):
-
-    unpacked_pkt = struct.unpack('!6s6sH', pkt) # Unpack
-
-    dest_MAC = unpacked_pkt[0].hex(':')
-    src_MAC = unpacked_pkt[1].hex(':')
-    proto_type = unpacked_pkt[2]
-
-    data = {'Destination MAC': dest_MAC,\
-            'Source MAC': src_MAC,\
-            'Protocal': proto_type}
-    
-    return data
-
-
 # Function to unpack the packet and get ip header data
 def get_ip_header(pkt):
 
