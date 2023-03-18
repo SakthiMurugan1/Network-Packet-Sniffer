@@ -1,12 +1,12 @@
-'''Following tutorial https://www.bitforestinfo.com/blog/02/15/how-to-write-simple-packet-sniffer.html'''
-
 #!/usr/bin/python
 import socket
 import struct
-import binascii
 
 # Creating a socket
 def get_socket():
+
+    HOST = (socket.gethostbyname(socket.getfqdn())) # Get local ip
+
     '''
     AF_INET specifies IPv4 address family
     RAW socket to capture IP protocal traffic
@@ -14,7 +14,7 @@ def get_socket():
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP) # Requires admin privileges for RAW sockets
 
     # Windows specific options for the socket
-    s.bind(("192.168.0.227", 0)) # Interface IP
+    s.bind((HOST, 0)) # Interface IP
     s.setsockopt(socket.IPPROTO_IP,socket.IP_HDRINCL,1)
     s.ioctl(socket.SIO_RCVALL,socket.RCVALL_ON) # Set promiscuous mode
 
@@ -59,10 +59,10 @@ def main():
         try:
             packet = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
 
-            eth_header = get_ip_header(packet[0][0:20]) # Get IP header values
+            ip_header = get_ip_header(packet[0][0:20]) # Get IP header values
 
             print('\n\n[+] IP Header')
-            for key, value in eth_header.items(): # Print header
+            for key, value in ip_header.items(): # Print header
                 print('\t{0} : {1}'.format(key, value))
         
         except KeyboardInterrupt:
