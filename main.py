@@ -3,13 +3,13 @@ import socket
 import struct
 
 # Creating a socket
-def get_socket():
+def init_socket():
 
     HOST = (socket.gethostbyname(socket.getfqdn())) # Get local ip
 
     '''
     AF_INET specifies IPv4 address family
-    RAW socket to capture IP protocal traffic
+    RAW socket to capture IP traffic
     '''
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP) # Requires admin privileges for RAW sockets
 
@@ -19,14 +19,28 @@ def get_socket():
     s.ioctl(socket.SIO_RCVALL,socket.RCVALL_ON) # Set promiscuous mode
 
     return s
+# Function to unpack and return ethernet header values
+def get_ethernet_header(frm: bytes):
+    unpacked_frm = struct.unpack('!6s6sH', frm)
 
-# Function to unpack the packet and get ip header data
-def get_ip_header(pkt):
+    _src_MAC = unpacked_frm[0].hex(':')
+    _dst_MAC = unpacked_frm[1].hex(':')
+    _protocol = socket.htons(unpacked_frm[2])
+
+    data = {'Source MAC':_src_MAC,
+    'Destination MAC':_dst_MAC,
+    'Protocal':_protocol}
+    
+    return data
+
+
+# Function to unpack the packet and return ip header data
+def get_ip_header(pkt: bytes):
 
     unpacked_pkt=struct.unpack("!BBHHHBBH4s4s", pkt)
 
     _version =unpacked_pkt[0] 
-    _tos=unpacked_pkt[1]
+    _tos =unpacked_pkt[1]
     _total_length =unpacked_pkt[2]
     _identification =unpacked_pkt[3]
     _fragment_Offset =unpacked_pkt[4]
@@ -36,7 +50,7 @@ def get_ip_header(pkt):
     _source_address =socket.inet_ntoa(unpacked_pkt[8])
     _destination_address =socket.inet_ntoa(unpacked_pkt[9])
     
-    data={'Version':_version,
+    data={'Version':_version,\
     "Tos":_tos,
     "Total Length":_total_length,
     "Identification":_identification,
@@ -52,16 +66,21 @@ def get_ip_header(pkt):
 
 def main():
     # Initialize socket
-    s = get_socket()
+    s = init_socket()
 
-    # Sniff traffic until keyboard interrupt
+    # Capture traffic until keyboard interrupt
     while True:
         try:
-            packet = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
+            raw_data = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
 
-            ip_header = get_ip_header(packet[0][0:20]) # Get IP header values
+            #eth_header = get_ethernet_header(raw_data[0][0:14]) # Get Ethernet header values
+            #print('\n\n[+] Ethernet Header')
+            #for key, value in eth_header.items(): # Print ethernet header
+            #    print('\t{0} : {1}'.format(key, value))
 
-            print('\n\n[+] IP Header')
+
+            ip_header = get_ip_header(raw_data[0][0:20]) # Get IP header values
+            print('\n[+] IP Header')
             for key, value in ip_header.items(): # Print header
                 print('\t{0} : {1}'.format(key, value))
         
