@@ -8,17 +8,19 @@ def init_socket():
     HOST = (socket.gethostbyname(socket.getfqdn())) # Get local ip
 
     '''
-    AF_INET specifies IPv4 address family
+    AF_INET - specifies IPv4 address family
+    PF_PACKET - allows device level network interace (Linux only)
     RAW socket to capture IP traffic
     '''
-    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP) # Requires admin privileges for RAW sockets
+    s = socket.socket(socket.PF_PACKET, socket.SOCK_RAW, socket.ntohs(3)) # Requires admin privileges for RAW sockets
 
-    # Windows specific options for the socket
-    s.bind((HOST, 0)) # Interface IP
-    s.setsockopt(socket.IPPROTO_IP,socket.IP_HDRINCL,1)
-    s.ioctl(socket.SIO_RCVALL,socket.RCVALL_ON) # Set promiscuous mode
+    # Windows platform specific options for the socket
+    #s.bind((HOST, 0)) # Interface IP
+    #s.setsockopt(socket.IPPROTO_IP,socket.IP_HDRINCL,1)
+    #s.ioctl(socket.SIO_RCVALL,socket.RCVALL_ON) # Set promiscuous mode
 
     return s
+
 # Function to unpack and return ethernet header values
 def get_ethernet_header(frm: bytes):
     unpacked_frm = struct.unpack('!6s6sH', frm)
@@ -73,13 +75,13 @@ def main():
         try:
             raw_data = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
 
-            #eth_header = get_ethernet_header(raw_data[0][0:14]) # Get Ethernet header values
-            #print('\n\n[+] Ethernet Header')
-            #for key, value in eth_header.items(): # Print ethernet header
-            #    print('\t{0} : {1}'.format(key, value))
+            eth_header = get_ethernet_header(raw_data[0][0:14]) # Get Ethernet header values
+            print('\n\n[+] Ethernet Header')
+            for key, value in eth_header.items(): # Print ethernet header
+                print('\t{0} : {1}'.format(key, value))
 
 
-            ip_header = get_ip_header(raw_data[0][0:20]) # Get IP header values
+            ip_header = get_ip_header(raw_data[0][14:34]) # Get IP header values
             print('\n[+] IP Header')
             for key, value in ip_header.items(): # Print header
                 print('\t{0} : {1}'.format(key, value))
