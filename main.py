@@ -23,6 +23,11 @@ def init_socket():
 
 
 def main():
+
+    TAB1 = '\t'
+    TAB2 = '\t\t'
+    TAB3 = '\t\t\t'
+
     # Initialize socket
     s = init_socket()
 
@@ -32,33 +37,33 @@ def main():
             raw_data, addr = s.recvfrom(65565) #Get data from socket. Firewall may need to be turned off to receive packets
 
             eth_header, eth_data = get_ethernet_header(raw_data) # Get Ethernet header values 14bytes
-            print('\n\n[+] Ethernet Header')
+            print('[+] Ethernet Header')
             for key, value in eth_header.items():
-                print('\t{0} : {1}'.format(key, value))
+                print(TAB1 + '- {}: {}'.format(key, value))
 
 
             ip_header, ip_data = get_ip_header(eth_data) # Get IP header
-            print('[+] IP Header')
+            print(TAB1 + '[+] IP Header')
             for key, value in ip_header.items():
-                print('\t{0} : {1}'.format(key, value))
+                print(TAB2 + '- {0}: {1}'.format(key, value))
 
             if(ip_header["Protocol"]==6): #TCP data
                 tcp_header, tcp_data = get_tcp_header(ip_data) # Get TCP header
 
-                print("[+] TCP Header")
+                print(TAB2 + "[+] TCP Header")
                 for key, value in tcp_header.items():
-                    print("\t{0} : {1}".format(key, value))
+                    print(TAB3 + "- {0}: {1}".format(key, value))
 
-                print('[-] TCP Data\n {}'.format(tcp_data))
+                #print('[-] TCP Data\n {}'.format(tcp_data))
 
             elif (ip_header["Protocol"]==17): # UDP datagram
                 udp_header, udp_data = get_udp_header(ip_data)
 
-                print("[+] UDP Header")
+                print(TAB2 + "[+] UDP Header")
                 for key, value in udp_header:
-                    print("{0}: {1}".format(key, value))
+                    print(TAB3 + "- {0}: {1}".format(key, value))
 
-                print("[-] UDPData\n{}".format(udp_data))
+                #print("[-] UDPData\n{}".format(udp_data))
         
         except KeyboardInterrupt:
             print('\nKeyboard interrupt received. Quitting')
