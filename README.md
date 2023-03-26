@@ -10,3 +10,7 @@ Platform: Linux
 
     - Requires admin privileges to execute
     - Listening port must be allowed in the firewall
+
+## Support
+
+Supports L2 Frames, IP Packets and TCP/UDP Segments
