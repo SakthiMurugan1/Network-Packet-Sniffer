@@ -14,3 +14,7 @@ Platform: Linux
 ## Support
 
 Supports L2 Frames, IP Packets and TCP/UDP Segments
+
+## Usage
+
+> sudo python3 ./main.py
